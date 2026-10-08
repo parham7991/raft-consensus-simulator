@@ -202,9 +202,9 @@ details.step h3{font-size:16.5px}
 
 /* ---------- team v2: real faces ---------- */
 .ava{width:88px;height:88px;border-radius:22px;overflow:hidden;position:relative;flex:none;background:var(--panel2);border:1px solid var(--line2)}
-.ava img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--e-out)}
+.ava img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--e-out)}
 .person:hover .ava img{transform:scale(1.08) rotate(1deg)}
-.ava .fb{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--fd);font-size:34px;color:#0b1220}
+.ava .fb{position:absolute;inset:0;z-index:0;display:grid;place-items:center;font-family:var(--fd);font-size:34px;color:#0b1220}
 .ava.a1 .fb{background:linear-gradient(135deg,#f87171,#dc2626)}
 .ava.a2 .fb{background:linear-gradient(135deg,#93c5fd,#3b82f6)}
 .resp{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
@@ -463,12 +463,12 @@ details.step h3{font-size:16.5px}
   <p class="slede">عکس‌ها مستقیم از پروفایل گیت‌هاب خودمان لود می‌شوند؛ اگر جایی شبکه قطع بود، حروف جایگزین حواسشان هست.</p>
   <div class="team">
     <div class="tile person" data-rv>
-      <div class="ava a1"><span class="fb">پ</span><img src="https://avatars.githubusercontent.com/u/31302433?v=4" alt="عکس پروفایل پرهام خان‌محمدی" loading="lazy" onerror="this.style.display='none'"></div>
+      <div class="ava a1"><span class="fb">پ</span><img src="https://avatars.githubusercontent.com/u/31302433?v=4" alt="عکس پروفایل پرهام خان‌محمدی" onerror="this.style.display='none'"></div>
       <div><h3>پرهام خان‌محمدی</h3><div class="role">موتور Raft · تست‌ها · معماری — Admin</div>
       <div class="resp"><span>موتور شبیه‌سازی</span><span>تست‌های سناریو</span><span>سرور WebSocket</span><span>دموی زنده</span></div>
       <div class="plinks"><a href="https://github.com/parham7991">github/parham7991</a><a href="https://t.me/Parham_7991">t.me/Parham_7991</a></div></div></div>
     <div class="tile person" data-rv style="--d:1">
-      <div class="ava a2"><span class="fb">ع</span><img src="https://avatars.githubusercontent.com/u/280059468?v=4" alt="عکس پروفایل علی عرب‌محمدی" loading="lazy" onerror="this.style.display='none'"></div>
+      <div class="ava a2"><span class="fb">ع</span><img src="https://avatars.githubusercontent.com/u/280059468?v=4" alt="عکس پروفایل علی عرب‌محمدی" onerror="this.style.display='none'"></div>
       <div><h3>علی عرب‌محمدی</h3><div class="role">UI/UX · لایهٔ نمایش · اسناد — Write</div>
       <div class="resp"><span>رابط شبیه‌ساز</span><span>دیزاین‌سیستم</span><span>سایت و اسناد</span><span>اسلاید ارائه</span></div>
       <div class="plinks"><a href="https://github.com/Alivrab">github/Alivrab</a><a href="https://t.me/c4llmeali">t.me/c4llmeali</a></div></div></div>
