@@ -3,238 +3,577 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>شبیه‌ساز اجماع Raft — داکیومنت پروژه</title>
+<title>Raft — شبیه‌ساز اجماع · پروژهٔ اصول سیستم‌عامل</title>
+<meta name="description" content="شبیه‌ساز تعاملی الگوریتم اجماع Raft؛ پروژهٔ درس اصول سیستم‌عامل. انتخاب رهبر، تکرار لاگ و تحمل خطا — زنده و قابل تماشا.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='8' r='5' fill='%23f87171'/%3E%3Ccircle cx='8' cy='24' r='5' fill='%2360a5fa'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%2360a5fa'/%3E%3Cpath d='M16 8L8 24M16 8l8 16M8 24h16' stroke='%23334155' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0b1020; --bg2:#0e1530; --card:rgba(255,255,255,.045); --line:rgba(255,255,255,.09);
-    --txt:#e8ecf8; --mut:#9aa4c0; --amber:#fbbf24; --coral:#fb7185; --teal:#2dd4bf;
-    --blue:#60a5fa; --violet:#a78bfa; --green:#4ade80;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{
-    background:var(--bg);
-    background-image:
-      radial-gradient(900px 500px at 85% -10%, rgba(96,165,250,.14), transparent 60%),
-      radial-gradient(700px 420px at 10% 15%, rgba(251,191,36,.08), transparent 60%),
-      radial-gradient(800px 500px at 50% 110%, rgba(45,212,191,.08), transparent 60%);
-    color:var(--txt);
-    font-family:Vazirmatn,"Segoe UI",Tahoma,"Noto Sans Arabic",sans-serif;
-    line-height:1.9; overflow-x:hidden;
-  }
-  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
-  nav{
-    position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
-    background:rgba(11,16,32,.72);border-bottom:1px solid var(--line);
-  }
-  nav .wrap{display:flex;align-items:center;gap:18px;height:60px}
-  nav .logo{font-weight:800;font-size:17px;display:flex;align-items:center;gap:9px}
-  nav .logo .dot{width:11px;height:11px;border-radius:50%;
-    background:conic-gradient(var(--amber),var(--coral),var(--teal),var(--amber));
-    box-shadow:0 0 14px rgba(251,191,36,.7)}
-  nav a{color:var(--mut);text-decoration:none;font-size:13.5px;transition:.2s}
-  nav a:hover{color:var(--txt)}
-  nav .spacer{flex:1}
-  .gh{background:var(--card);border:1px solid var(--line);padding:7px 14px;border-radius:10px;color:var(--txt)!important;font-size:13px}
-  .gh:hover{border-color:var(--amber)}
+/* ---------- tokens (design-system: premium dark + action red) ---------- */
+:root{
+  --bg:#0b1220; --bg2:#0f172a; --panel:#101c33; --panel2:#0d1830;
+  --line:#1e293b; --line2:#334155;
+  --fg:#f8fafc; --mut:#94a3b8; --dim:#64748b;
+  --accent:#dc2626; --accent-hi:#f87171;
+  --info:#60a5fa; --ok:#4ade80; --warn:#fbbf24; --violet:#a78bfa;
+  --fd:'Lalezar',Vazirmatn,Tahoma,sans-serif;
+  --fb:'Vazirmatn',Tahoma,'Segoe UI',sans-serif;
+  --fm:'Share Tech Mono','Courier New',monospace;
+  --e-out:cubic-bezier(.22,1,.36,1);
+  --r:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--fb);
+  font-size:16px; line-height:1.9; overflow-x:hidden;
+}
+/* لایهٔ نویز + شبکهٔ محو — بافت دست‌ساز */
+body::before{content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background:
+    radial-gradient(1100px 600px at 88% -12%, rgba(220,38,38,.10), transparent 62%),
+    radial-gradient(900px 520px at 6% 22%, rgba(96,165,250,.07), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(148,163,184,.045) 47px 48px),
+    repeating-linear-gradient(90deg, transparent 0 47px, rgba(148,163,184,.045) 47px 48px);
+}
+body::after{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+::selection{background:rgba(220,38,38,.45); color:#fff}
+a{color:inherit}
+.wrap{max-width:1160px; margin:0 auto; padding:0 22px}
+.mono{font-family:var(--fm); direction:ltr;unicode-bidi:embed}
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
-  header.hero{padding:88px 0 60px;text-align:center;position:relative}
-  .badge{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--amber);
-    background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.35);padding:6px 16px;border-radius:999px;margin-bottom:26px}
-  h1{font-size:clamp(34px,6vw,58px);font-weight:900;line-height:1.35;letter-spacing:-.5px}
-  h1 .grad{background:linear-gradient(90deg,var(--amber),var(--coral) 45%,var(--violet));
-    -webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{color:var(--mut);font-size:clamp(14px,2.2vw,17px);max-width:640px;margin:18px auto 34px}
-  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .btn{padding:12px 26px;border-radius:12px;text-decoration:none;font-size:14.5px;font-weight:700;transition:.2s;border:1px solid transparent}
-  .btn.pri{background:linear-gradient(135deg,var(--amber),var(--coral));color:#1a1026;box-shadow:0 8px 30px rgba(251,113,133,.35)}
-  .btn.pri:hover{transform:translateY(-2px)}
-  .btn.ghost{border-color:var(--line);color:var(--txt);background:var(--card)}
-  .btn.ghost:hover{border-color:var(--teal);color:var(--teal)}
-  .chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:34px}
-  .chip{font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 14px;background:var(--card)}
-  .chip b{color:var(--txt)}
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:60;background:rgba(11,18,32,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:20px;height:62px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--fd);font-size:20px;text-decoration:none}
+.logo .mk{width:30px;height:30px}
+nav .links{display:flex;gap:4px;margin-right:auto}
+nav .links a{color:var(--mut);text-decoration:none;font-size:13.5px;padding:9px 13px;border-radius:9px;transition:color .2s,background .2s;cursor:pointer}
+nav .links a:hover{color:var(--fg);background:rgba(148,163,184,.09)}
+.btn{display:inline-flex;align-items:center;gap:9px;min-height:46px;padding:0 22px;border-radius:11px;
+  font-size:14.5px;font-weight:600;text-decoration:none;cursor:pointer;border:1px solid transparent;
+  transition:transform .2s var(--e-out),box-shadow .25s,border-color .2s,background .2s}
+.btn:active{transform:scale(.97)}
+.btn.red{background:var(--accent);color:#fff;box-shadow:0 10px 30px rgba(220,38,38,.35)}
+.btn.red:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(220,38,38,.45)}
+.btn.ghost{border-color:var(--line2);color:var(--fg);background:transparent}
+.btn.ghost:hover{border-color:var(--accent-hi);color:var(--accent-hi)}
+.btn.sm{min-height:40px;padding:0 16px;font-size:13px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent-hi);outline-offset:3px;border-radius:6px}
+#menu-btn{display:none;background:none;border:1px solid var(--line2);border-radius:10px;color:var(--fg);width:44px;height:44px;cursor:pointer;place-items:center}
 
-  section{padding:56px 0}
-  h2{font-size:clamp(22px,3.4vw,30px);font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:12px}
-  h2 .bar{width:5px;height:26px;border-radius:4px;background:linear-gradient(180deg,var(--amber),var(--coral))}
-  .lead{color:var(--mut);max-width:720px;margin-bottom:30px;font-size:15px}
+/* ---------- opening ---------- */
+header{padding:70px 0 30px}
+header .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--accent-hi);
+  border:1px solid rgba(220,38,38,.4);background:rgba(220,38,38,.08);border-radius:999px;padding:6px 15px;margin-bottom:24px}
+.kicker .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent-hi);animation:pl 1.8s infinite}
+@keyframes pl{50%{box-shadow:0 0 0 7px rgba(248,113,113,.12)}}
+h1{font-family:var(--fd);font-weight:400;font-size:clamp(40px,6.4vw,72px);line-height:1.28}
+h1 .w{display:inline-block;opacity:0;transform:translateY(26px);filter:blur(6px);
+  animation:wup .7s var(--e-out) forwards;animation-delay:calc(var(--i)*90ms)}
+@keyframes wup{to{opacity:1;transform:none;filter:none}}
+h1 em{font-style:normal;color:var(--accent-hi)}
+.lede{color:var(--mut);font-size:15.5px;max-width:520px;margin:16px 0 30px}
+.lede b{color:var(--fg)}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.note{margin-top:26px;font-size:12px;color:var(--dim)}
+.note .mono{color:var(--line2)}
 
-  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;transition:.25s;position:relative;overflow:hidden}
-  .card:hover{transform:translateY(-4px);border-color:rgba(251,191,36,.4);box-shadow:0 16px 44px rgba(0,0,0,.4)}
-  .card .ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;font-size:22px}
-  .card h3{font-size:17px;margin-bottom:8px}
-  .card p{color:var(--mut);font-size:13.5px}
-  .i1{background:rgba(251,191,36,.14)} .i2{background:rgba(96,165,250,.14)} .i3{background:rgba(45,212,191,.14)}
+/* پنل شبیه‌سازی زنده */
+.live{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.live .bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line);background:rgba(15,23,42,.6)}
+.live .bar .d{width:10px;height:10px;border-radius:50%}
+.live .bar .t{margin-right:auto;font-family:var(--fm);font-size:11.5px;color:var(--dim);direction:ltr}
+.live svg{display:block;width:100%;height:auto}
+.live .stat{display:flex;gap:0;border-top:1px solid var(--line)}
+.live .stat div{flex:1;padding:10px 14px;border-inline-start:1px solid var(--line);font-size:11.5px;color:var(--mut)}
+.live .stat div:first-child{border-inline-start:0}
+.live .stat b{display:block;color:var(--fg);font-size:14px;font-family:var(--fm);direction:ltr;text-align:right}
+.live .tick{padding:8px 16px 12px;font-size:11.5px;color:var(--dim);min-height:34px;border-top:1px solid var(--line)}
+.live .tick span{color:var(--warn)}
 
-  .timeline{position:relative;padding-right:26px}
-  .timeline::before{content:"";position:absolute;right:7px;top:6px;bottom:6px;width:2px;
-    background:linear-gradient(180deg,var(--green),var(--blue),var(--violet),var(--line))}
-  .tl{position:relative;margin-bottom:22px}
-  .tl::before{content:"";position:absolute;right:-26px;top:26px;width:16px;height:16px;border-radius:50%;
-    background:var(--bg);border:3px solid var(--blue);box-shadow:0 0 0 4px rgba(96,165,250,.15)}
-  .tl.done::before{border-color:var(--green);box-shadow:0 0 0 4px rgba(74,222,128,.15)}
-  .tl.now::before{border-color:var(--amber);box-shadow:0 0 0 4px rgba(251,191,36,.18);animation:pulse 1.6s infinite}
-  @keyframes pulse{50%{box-shadow:0 0 0 9px rgba(251,191,36,.05)}}
-  .tl .head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .tl h3{font-size:16px}
-  .st{font-size:11px;padding:3px 12px;border-radius:999px;border:1px solid}
-  .st.done{color:var(--green);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.08)}
-  .st.now{color:var(--amber);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08)}
-  .st.todo{color:var(--mut);border-color:var(--line);background:var(--card)}
-  .date{font-size:12px;color:var(--mut)}
-  .tl p{color:var(--mut);font-size:13.5px;margin-top:6px;max-width:700px}
+/* ---------- sections ---------- */
+section{padding:64px 0}
+.shead{display:flex;align-items:baseline;gap:16px;margin-bottom:12px}
+.shead .no{font-family:var(--fm);font-size:13px;color:var(--accent-hi);direction:ltr}
+h2{font-family:var(--fd);font-weight:400;font-size:clamp(26px,4vw,38px)}
+.slede{color:var(--mut);font-size:14.5px;max-width:680px;margin-bottom:34px}
 
-  .arch{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:26px;overflow-x:auto}
-  .arch svg{display:block;margin:0 auto;min-width:640px}
+/* reveal on scroll */
+[data-rv]{opacity:0;transform:translateY(18px);transition:opacity .6s var(--e-out),transform .6s var(--e-out);transition-delay:calc(var(--d,0)*70ms)}
+[data-rv].in{opacity:1;transform:none}
 
-  .team{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-  .member{display:flex;gap:18px;align-items:center}
-  .ava{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;font-size:26px;font-weight:900;color:#10131f;flex-shrink:0}
-  .a1{background:linear-gradient(135deg,var(--amber),var(--coral))}
-  .a2{background:linear-gradient(135deg,var(--teal),var(--blue))}
-  .member h3{font-size:16px}
-  .member .role{color:var(--mut);font-size:12.5px;margin:3px 0 8px}
-  .links{display:flex;gap:8px}
-  .links a{font-size:11.5px;color:var(--mut);border:1px solid var(--line);padding:3px 11px;border-radius:8px;text-decoration:none;transition:.2s}
-  .links a:hover{color:var(--teal);border-color:var(--teal)}
+/* ---------- bento ---------- */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px;position:relative;overflow:hidden;
+  transition:transform .25s var(--e-out),border-color .25s,box-shadow .3s}
+.tile:hover{transform:translateY(-4px) scale(1.01);border-color:var(--line2);box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.tile h3{font-family:var(--fd);font-weight:400;font-size:21px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.tile h3 .i{color:var(--accent-hi)}
+.tile p{color:var(--mut);font-size:13.5px}
+.tile .tag{position:absolute;top:18px;left:18px;font-family:var(--fm);font-size:10.5px;color:var(--dim);direction:ltr}
+.t7{grid-column:span 7}.t5{grid-column:span 5}.t12{grid-column:span 12}.t4{grid-column:span 4}
+/* نوار لاگ تزئینی داخل tile تکرار */
+.logstrip{display:flex;gap:5px;margin-top:18px;direction:ltr}
+.logstrip i{height:26px;flex:1;border-radius:5px;background:var(--line);position:relative;overflow:hidden}
+.logstrip i::after{content:"";position:absolute;inset:0;transform:translateX(-101%);background:linear-gradient(90deg,transparent,rgba(96,165,250,.35),transparent);animation:sweep 2.8s infinite}
+.logstrip i:nth-child(2)::after{animation-delay:.18s}.logstrip i:nth-child(3)::after{animation-delay:.36s}
+.logstrip i:nth-child(4)::after{animation-delay:.54s}.logstrip i:nth-child(5)::after{animation-delay:.72s}
+.logstrip i.on{background:rgba(96,165,250,.28);border:1px solid rgba(96,165,250,.4)}
+@keyframes sweep{60%,100%{transform:translateX(101%)}}
+/* چک‌لیست ایمنی */
+.safe{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:16px}
+.safe li{list-style:none;display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mut);background:rgba(15,23,42,.55);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.safe li .i{color:var(--ok);margin-top:4px;width:15px;height:15px}
+.safe b{color:var(--fg)}
 
-  .doclist{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-  .doc{display:block;text-decoration:none;color:var(--txt)}
-  .doc .num{font-size:11px;color:var(--amber);letter-spacing:2px}
-  .doc h3{font-size:15px;margin:6px 0 4px}
-  .doc p{color:var(--mut);font-size:12.5px}
-  .doc .arr{position:absolute;left:22px;top:24px;color:var(--mut);transition:.2s}
-  .doc:hover .arr{left:16px;color:var(--amber)}
+/* ---------- مراحل ---------- */
+.steps{counter-reset:st;display:flex;flex-direction:column;gap:14px}
+.step{display:grid;grid-template-columns:86px 1fr;gap:20px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;transition:border-color .25s,transform .25s var(--e-out)}
+.step:hover{transform:translateX(-6px);border-color:var(--line2)}
+.step .n{font-family:var(--fd);font-size:46px;line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--line2);text-align:center;padding-top:6px}
+.step h3{font-size:16.5px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.step p{color:var(--mut);font-size:13.5px}
+.step .jobs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.step .jobs span{font-size:11.5px;color:var(--mut);border:1px solid var(--line2);border-radius:999px;padding:4px 12px;background:rgba(15,23,42,.5)}
+.st-ico{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;flex:none}
+.st-ico .i{width:12px;height:12px}
+.done .st-ico{background:rgba(74,222,128,.15);color:var(--ok)}
+.done .n{-webkit-text-stroke-color:rgba(74,222,128,.5)}
+.now{border-color:rgba(220,38,38,.45)}
+.now .st-ico{background:rgba(220,38,38,.18);color:var(--accent-hi);animation:pl 1.8s infinite}
+.now .n{-webkit-text-stroke-color:var(--accent)}
+.st-label{font-size:11px;padding:3px 11px;border-radius:999px;border:1px solid}
+.done .st-label{color:var(--ok);border-color:rgba(74,222,128,.4)}
+.now .st-label{color:var(--accent-hi);border-color:rgba(220,38,38,.4)}
+.todo .st-ico{background:rgba(148,163,184,.1);color:var(--dim)}
+.todo .st-label{color:var(--dim);border-color:var(--line2)}
 
-  footer{border-top:1px solid var(--line);padding:34px 0 44px;text-align:center;color:var(--mut);font-size:13px}
-  footer b{color:var(--txt)}
-  ::selection{background:rgba(251,191,36,.35)}
+/* ---------- معماری ---------- */
+.arch{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:28px;overflow-x:auto}
+.arch svg{min-width:660px;display:block;margin:0 auto}
+.mods{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;direction:ltr;justify-content:center}
+.mods code{font-family:var(--fm);font-size:12px;color:var(--info);background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.25);border-radius:8px;padding:6px 13px;transition:.2s;cursor:default}
+.mods code:hover{background:rgba(96,165,250,.16);transform:translateY(-2px)}
+
+/* ---------- تیم ---------- */
+.team{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.person{display:flex;gap:18px;align-items:center}
+.ava{width:66px;height:66px;border-radius:16px;display:grid;place-items:center;font-family:var(--fd);font-size:30px;color:#0b1220;flex:none;transition:transform .3s var(--e-out)}
+.person:hover .ava{transform:rotate(-6deg) scale(1.06)}
+.a1{background:linear-gradient(135deg,#f87171,#dc2626)}
+.a2{background:linear-gradient(135deg,#93c5fd,#3b82f6)}
+.person h3{font-size:16px}
+.person .role{color:var(--mut);font-size:12.5px;margin:2px 0 10px}
+.plinks{display:flex;gap:8px;flex-wrap:wrap}
+.plinks a{font-family:var(--fm);font-size:11px;direction:ltr;color:var(--mut);border:1px solid var(--line2);padding:5px 12px;border-radius:8px;text-decoration:none;transition:.2s}
+.plinks a:hover{color:var(--accent-hi);border-color:var(--accent-hi)}
+
+/* ---------- اسناد ---------- */
+.docs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.doc{display:block;text-decoration:none;position:relative}
+.doc .num{font-family:var(--fm);font-size:11px;color:var(--accent-hi);direction:ltr;display:block}
+.doc h3{font-size:15.5px;margin:8px 0 4px}
+.doc p{font-size:12.5px}
+.doc .arr{position:absolute;left:20px;bottom:20px;color:var(--dim);transition:.25s var(--e-out)}
+.doc:hover .arr{left:14px;color:var(--accent-hi)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:30px}
+footer .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:var(--dim);font-size:13px}
+footer .heart{color:var(--accent-hi)}
+footer .sp{flex:1}
+footer a{color:var(--mut);text-decoration:none}
+footer a:hover{color:var(--fg)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1024px){
+  header .wrap{grid-template-columns:1fr;gap:34px}
+  .t7,.t5{grid-column:span 12}
+  .docs{grid-template-columns:1fr 1fr}
+}
+@media (max-width:768px){
+  nav .links{display:none;position:absolute;top:62px;right:0;left:0;flex-direction:column;background:rgba(11,18,32,.97);border-bottom:1px solid var(--line);padding:12px 22px;gap:2px}
+  nav.open .links{display:flex}
+  #menu-btn{display:grid;margin-right:auto}
+  .team{grid-template-columns:1fr}
+  .step{grid-template-columns:56px 1fr;gap:14px}
+  .step .n{font-size:34px}
+}
+@media (max-width:480px){
+  .docs{grid-template-columns:1fr}
+  .t4{grid-column:span 12}
+  section{padding:48px 0}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+  [data-rv]{opacity:1;transform:none}
+  h1 .w{opacity:1;transform:none;filter:none;animation:none}
+}
 </style>
 </head>
 <body>
 
-<nav><div class="wrap">
-  <div class="logo"><span class="dot"></span> Raft Simulator</div>
-  <a href="#about">معرفی</a>
-  <a href="#roadmap">نقشهٔ راه</a>
-  <a href="#arch">معماری</a>
-  <a href="#team">تیم</a>
-  <a href="#docs">اسناد</a>
-  <div class="spacer"></div>
-  <a class="gh" href="https://github.com/parham7991/raft-consensus-simulator">GitHub ↗</a>
+<nav id="nav"><div class="wrap">
+  <a class="logo" href="#" aria-label="خانه">
+    <svg class="mk" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 7L8 25M16 7l8 18M8 25h16" stroke="#334155" stroke-width="2.4"/><circle cx="16" cy="7" r="5" fill="#f87171"/><circle cx="8" cy="25" r="5" fill="#60a5fa"/><circle cx="24" cy="25" r="5" fill="#60a5fa"/></svg>
+    Raft<span style="color:var(--dim)">/</span>Sim
+  </a>
+  <div class="links" id="links">
+    <a href="#concept">مفهوم</a>
+    <a href="#steps">مراحل</a>
+    <a href="#arch">معماری</a>
+    <a href="#team">تیم</a>
+    <a href="#docs">اسناد</a>
+  </div>
+  <button id="menu-btn" aria-label="منو" aria-expanded="false"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="btn red sm" href="https://github.com/parham7991/raft-consensus-simulator" style="margin-right:10px">
+    <svg class="i" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+    مخزن
+  </a>
 </div></nav>
 
-<header class="hero"><div class="wrap">
-  <div class="badge">🎓 پروژهٔ درس اصول سیستم‌عامل — پاییز ۱۴۰۵</div>
-  <h1>شبیه‌ساز تعاملی<br><span class="grad">اجماع Raft</span></h1>
-  <p class="sub">انتخاب رهبر، تکرار لاگ و تحمل خطا در یک خوشهٔ توزیع‌شده — زنده، قابل‌کلیک و قابل‌فهم.
-  موتور پایتون (asyncio) + رابط وب سبک؛ بدون هیچ فریم‌ورک سنگینی.</p>
-  <div class="cta">
-    <a class="btn pri" href="https://github.com/parham7991/raft-consensus-simulator">مشاهدهٔ مخزن گیت‌هاب</a>
-    <a class="btn ghost" href="https://raft.github.io/raft.pdf">مقالهٔ اصلی Raft ↗</a>
+<header><div class="wrap">
+  <div>
+    <span class="kicker"><span class="pulse"></span> پروژهٔ درس اصول سیستم‌عامل</span>
+    <h1 id="h1" aria-label="اجماع، قابل تماشا.">اجماع، <em>قابل تماشا.</em></h1>
+    <p class="lede">Raft الگوریتمی است که چند گرهٔ مستقل را — با تمام خرابی‌ها و قطعی‌ها — به یک ذهن واحد تبدیل می‌کند.
+      ما همان را <b>زنده</b> شبیه‌سازی می‌کنیم: رهبرها می‌میرند، شبکه نصف می‌شود، و لاگ‌ها جلوی چشمِ شما هم‌راستا می‌مانند.</p>
+    <div class="cta">
+      <a class="btn red" href="https://github.com/parham7991/raft-consensus-simulator">
+        <svg class="i" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+        مخزن گیت‌هاب</a>
+      <a class="btn ghost" href="https://raft.github.io/raft.pdf">
+        <svg class="i" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        مقالهٔ اصلی ۲۰۱۴</a>
+    </div>
+    <p class="note"><span class="mono">// </span> پنل روبه‌رو تزئینی نیست؛ یک خوشهٔ Raft واقعی است که همین حالا دارد elect می‌کند.</p>
   </div>
-  <div class="chips">
-    <span class="chip">وضعیت: <b>فاز ۰ — داکیومنت ✅</b></span>
-    <span class="chip">ددلاین نهایی: <b>۲۶ آذر ۱۴۰۵</b></span>
-    <span class="chip">زبان موتور: <b>Python 3.11+</b></span>
-    <span class="chip">مجوز: <b>MIT</b></span>
+
+  <!-- خوشهٔ زنده -->
+  <div class="live" aria-label="پیش‌نمایش زندهٔ خوشهٔ Raft">
+    <div class="bar">
+      <span class="d" style="background:#f87171"></span><span class="d" style="background:#fbbf24"></span><span class="d" style="background:#4ade80"></span>
+      <span class="t">cluster · 3 nodes · live</span>
+    </div>
+    <svg id="sim" viewBox="0 0 420 260" role="img" aria-label="نمای زندهٔ خوشه: سه گره، پیام‌های heartbeat و انتخابات">
+      <g id="links" stroke="#1e293b" stroke-width="1.6"></g>
+      <g id="msgs"></g>
+      <g id="nodes"></g>
+    </svg>
+    <div class="stat">
+      <div>Term <b id="s-term">1</b></div>
+      <div>Leader <b id="s-lead">—</b></div>
+      <div>Commit <b id="s-com">0</b></div>
+    </div>
+    <div class="tick" id="s-ev">در حال بوت خوشه…</div>
   </div>
 </div></header>
 
-<section id="about"><div class="wrap">
-  <h2><span class="bar"></span> Raft در سه پرده</h2>
-  <p class="lead">Raft الگوریتم اجماعی است که Paxos را با هدف «فهمیدن» بازنویسی می‌کند. شبیه‌ساز ما هر سه زیرمسئلهٔ آن را به‌صورت بصری اجرا می‌کند. جزئیات کامل در سند تئوری.</p>
-  <div class="grid3">
-    <div class="card"><div class="ico i1">🗳️</div><h3>انتخاب رهبر</h3>
-      <p>تایمرهای تصادفی، RequestVote و قانون اکثریت. وقتی رهبر می‌میرد، خوشه در کسری از ثانیه جانشین را برمی‌گزیند — و split vote هم همین‌جا دیده می‌شود.</p></div>
-    <div class="card"><div class="ico i2">📜</div><h3>تکرار لاگ</h3>
-      <p>رهبر دستورها را تکثیر می‌کند؛ AppendEntries با Log Matching تضادها را می‌یابد، truncate می‌کند و commitIndex را امن جلو می‌برد.</p></div>
-    <div class="card"><div class="ico i3">🛡️</div><h3>ایمنی</h3>
-      <p>Leader Completeness و State Machine Safety: هیچ دادهٔ commit‌شده‌ای گم نمی‌شود و هیچ گره‌ای تاریخچهٔ متفاوتی اعمال نمی‌کند.</p></div>
+<!-- ۰۱ مفهوم -->
+<section id="concept"><div class="wrap">
+  <div class="shead"><span class="no">01/</span><h2>یک الگوریتم، سه پرده</h2></div>
+  <p class="slede">Raft برای «فهمیده شدن» ساخته شد؛ ما هم هر سه زیرمسئله‌اش را جداگانه و بصری روایت می‌کنیم. متن کامل در سند تئوری.</p>
+  <div class="bento">
+    <div class="tile t7" data-rv>
+      <span class="tag">election</span>
+      <h3><svg class="i" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> انتخاب رهبر</h3>
+      <p>تایمر تصادفی هر گره که تمام شود، نامزد می‌شود؛ رأی فقط به لاگِ به‌روزتر، و فقط یک رأی در هر Term.
+         اکثریت که جمع شد، heartbeatها جاری می‌شوند — و اگر دو نامزد هم‌زمان برسند، split vote را با چشم می‌بینید، نه با فرمول.</p>
+      <div class="logstrip" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="tile t5" data-rv style="--d:1">
+      <span class="tag">replication</span>
+      <h3><svg class="i" viewBox="0 0 24 24"><path d="M4 17V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10"/><path d="M4 17h16"/><path d="M8 9h8M8 13h5"/></svg> تکرار لاگ</h3>
+      <p>رهبر دستورها را با AppendEntries تکثیر می‌کند؛ تضاد با Log Matching پیدا و با truncate حل می‌شود. commit یعنی «دیگر برگشت‌پذیر نیست».</p>
+    </div>
+    <div class="tile t12" data-rv style="--d:2">
+      <span class="tag">safety</span>
+      <h3><svg class="i" viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/></svg> ایمنی، نه امیدواری</h3>
+      <p>هیچ entry commit‌شده‌ای هرگز بازنویسی نمی‌شود؛ رهبر قدیمی که از پارتیشن برگردد، بدون سروصدا step-down می‌کند. این‌ها قول‌های Raft است و شبیه‌ساز آن‌ها را تست می‌کند، نه فقط نمایش:</p>
+      <ul class="safe">
+        <li><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg><span><b>Leader Completeness</b> — رهبر جدید همهٔ commitهای قبلی را دارد.</span></li>
+        <li><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg><span><b>State Machine Safety</b> — دو گره هرگز در یک ایندکس، فرمان متفاوت اجرا نمی‌کنند.</span></li>
+        <li><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg><span><b>Term monotonic</b> — زمان منطقی فقط جلو می‌رود.</span></li>
+      </ul>
+    </div>
   </div>
 </div></section>
 
-<section id="roadmap"><div class="wrap">
-  <h2><span class="bar"></span> نقشهٔ راه و ددلاین‌ها</h2>
-  <p class="lead">هر فاز یک Milestone واقعی روی گیت‌هاب است با Issueهای خودش. جلسهٔ هماهنگی: جمعه‌ها.</p>
-  <div class="timeline">
-    <div class="tl done"><div class="head"><h3>فاز ۰ — راه‌اندازی و داکیومنت</h3><span class="st done">انجام شد ✅</span><span class="date">۱۶ مهر ۱۴۰۵ · 2026-10-08</span></div>
-      <p>مخزن مشترک، دعوت هم‌تیمی، README، قالب‌ها، همین سایت و فعال‌سازی GitHub Pages.</p></div>
-    <div class="tl now"><div class="head"><h3>فاز ۱ — هستهٔ انتخاب رهبر</h3><span class="st now">در جریان 🔵</span><span class="date">ددلاین: ۳۰ مهر · 2026-10-22</span></div>
-      <p>ماشین حالت سه‌نقشی، تایمر تصادفی، RequestVote + تست واحدِ تک‌رهبر بودن.</p></div>
-    <div class="tl"><div class="head"><h3>فاز ۲ — تکرار لاگ</h3><span class="st todo">در انتظار</span><span class="date">ددلاین: ۴ آبان · 2026-11-05</span></div>
-      <p>AppendEntries/heartbeat، مدیریت تضاد و truncate، state machine و commit.</p></div>
-    <div class="tl"><div class="head"><h3>فاز ۳ — تحمل خطا</h3><span class="st todo">در انتظار</span><span class="date">ددلاین: ۲۸ آبان · 2026-11-19</span></div>
-      <p>kill/restart گره‌ها، پارتیشن شبکه، مرگ رهبر، heal و step-down رهبر قدیمی.</p></div>
-    <div class="tl"><div class="head"><h3>فاز ۴ — رابط وب تعاملی</h3><span class="st todo">در انتظار</span><span class="date">ددلاین: ۱۲ آذر · 2026-12-03</span></div>
-      <p>توپولوژی SVG با انیمیشن پیام‌ها، پنل لاگ گره‌ها، کنترل سرعت/پارتیشن، پل WebSocket.</p></div>
-    <div class="tl"><div class="head"><h3>فاز ۵ — گزارش و ارائه</h3><span class="st todo">در انتظار</span><span class="date">ددلاین: ۲۶ آذر · 2026-12-17</span></div>
-      <p>گزارش نهایی مطابق قالب درس، اسلاید و دموی زندهٔ سناریوها + یک هفته بوفِر.</p></div>
+<!-- ۰۲ مراحل -->
+<section id="steps"><div class="wrap">
+  <div class="shead"><span class="no">02/</span><h2>مسیر ساخت، مرحله به مرحله</h2></div>
+  <p class="slede">بدون عجله و بدون پرش: هر مرحله وقتی تمام است که تست‌هایش سبز باشند. روی گیت‌هاب، هر مرحله یک Milestone و هر کار یک Issue است.</p>
+  <div class="steps">
+    <div class="step done" data-rv><div class="n">۰</div><div>
+      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span> پی‌ریزی پروژه <span class="st-label">تمام شد</span></h3>
+      <p>مخزن مشترک با دسترسی Write برای هر دو عضو، README و اسناد فنی، همین سایت، قالب‌های Issue/PR و قوانین مشارکت.</p>
+      <div class="jobs"><span>README دوزبانه</span><span>۴ سند فنی</span><span>سایت داکیومنت</span><span>قالب‌های GitHub</span></div>
+    </div></div>
+    <div class="step now" data-rv style="--d:1"><div class="n">۱</div><div>
+      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span> هستهٔ انتخاب رهبر <span class="st-label">همین حالا</span></h3>
+      <p>ماشین حالت سه‌نقشی با state ماندگار/فرار، تایمر انتخابات تصادفی، RPCهای رأی‌گیری و قانون لاگِ به‌روز.</p>
+      <div class="jobs"><span>raft/core/node.py</span><span>RequestVote</span><span>تست تک‌رهبری</span><span>تست split-vote</span></div>
+    </div></div>
+    <div class="step todo" data-rv style="--d:2"><div class="n">۲</div><div>
+      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18"/></svg></span> تکرار لاگ <span class="st-label">بعدی</span></h3>
+      <p>AppendEntries و heartbeat، مدیریت nextIndex/matchIndex، تشخیص تضاد و truncate، محاسبهٔ commit و اعمال ترتیبی به state machine.</p>
+      <div class="jobs"><span>AppendEntries</span><span>conflict & truncate</span><span>state machine</span><span>تست ۱۰ فرمان</span></div>
+    </div></div>
+    <div class="step todo" data-rv style="--d:3"><div class="n">۳</div><div>
+      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg></span> تحمل خطا <span class="st-label">در صف</span></h3>
+      <p>kill/restart با مرز دقیق persisted/volatile، پارتیشن شبکه، مرگ رهبر، split-brain و heal — هر سناریو یک تست یکپارچه.</p>
+      <div class="jobs"><span>crash/restart</span><span>partition</span><span>step-down رهبر قدیمی</span></div>
+    </div></div>
+    <div class="step todo" data-rv style="--d:4"><div class="n">۴</div><div>
+      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 22h8M12 18v4"/></svg></span> رابط وب تعاملی <span class="st-label">در صف</span></h3>
+      <p>توپولوژی SVG با انیمیشن پیام‌ها، قطع لینک با کلیک، پنل لاگ رنگی هر گره، event stream زنده، کنترل سرعت و pause/step — وصل به موتور با WebSocket.</p>
+      <div class="jobs"><span>SVG topology</span><span>event stream</span><span>WebSocket bridge</span><span>تست E2E</span></div>
+    </div></div>
+    <div class="step todo" data-rv style="--d:5"><div class="n">۵</div><div>
+      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg></span> گزارش و ارائه <span class="st-label">پایانی</span></h3>
+      <p>گزارش نهایی مطابق قالب درس، اسلاید، و دموی زندهٔ سه‌دقیقه‌ای سناریوها — با یک بوفِر کامل برای اتفاقات ناخواسته.</p>
+      <div class="jobs"><span>گزارش</span><span>اسلاید</span><span>دموی زنده</span></div>
+    </div></div>
   </div>
 </div></section>
 
+<!-- ۰۳ معماری -->
 <section id="arch"><div class="wrap">
-  <h2><span class="bar"></span> معماری سیستم</h2>
-  <p class="lead">موتور کاملاً از نمایش جداست؛ همان کد هم در تست headless اجرا می‌شود هم پشت WebSocket. جزئیات در سند معماری.</p>
-  <div class="arch">
-  <svg viewBox="0 0 720 300" font-family="inherit" direction="ltr">
-    <defs>
-      <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#fb7185"/>
-      </linearGradient>
-      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-        <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/>
-      </marker>
-    </defs>
-    <rect x="20" y="20" width="680" height="90" rx="16" fill="rgba(96,165,250,.08)" stroke="#60a5fa" stroke-opacity=".45"/>
-    <text x="40" y="50" fill="#e8ecf8" font-size="15" font-weight="700">Browser — web/ (Vanilla JS + SVG)</text>
-    <text x="40" y="78" fill="#9aa4c0" font-size="12">topology · per-node logs · event stream · controls (speed / partition / submit)</text>
-    <line x1="360" y1="110" x2="360" y2="160" stroke="#60a5fa" stroke-width="2" marker-end="url(#ar)"/>
-    <text x="372" y="140" fill="#60a5fa" font-size="12">WebSocket events</text>
-    <rect x="20" y="170" width="680" height="110" rx="16" fill="rgba(45,212,191,.07)" stroke="#2dd4bf" stroke-opacity=".4"/>
-    <text x="40" y="200" fill="#e8ecf8" font-size="15" font-weight="700">Python 3.11 — raft/ (asyncio)</text>
-    <rect x="40" y="215" width="150" height="46" rx="10" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.15)"/>
-    <text x="58" y="243" fill="#9aa4c0" font-size="12">core/node.py</text>
-    <rect x="205" y="215" width="150" height="46" rx="10" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.15)"/>
-    <text x="223" y="243" fill="#9aa4c0" font-size="12">core/cluster.py</text>
-    <rect x="370" y="215" width="150" height="46" rx="10" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.15)"/>
-    <text x="388" y="243" fill="#9aa4c0" font-size="12">core/network.py</text>
-    <rect x="535" y="215" width="150" height="46" rx="10" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.15)"/>
-    <text x="553" y="243" fill="#9aa4c0" font-size="12">api/server.py</text>
-  </svg>
+  <div class="shead"><span class="no">03/</span><h2>معماری: موتور جدا، نمایش جدا</h2></div>
+  <p class="slede">موتور پایتون هیچ DOMای نمی‌شناسد؛ فقط رویداد منتشر می‌کند. همان کد هم در pytest اجرا می‌شود هم پشت WebSocket برای مرورگر.</p>
+  <div class="arch" data-rv>
+    <svg viewBox="0 0 720 300" font-family="Vazirmatn,Tahoma" direction="ltr">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+      </defs>
+      <rect x="20" y="18" width="680" height="92" rx="14" fill="rgba(96,165,250,.07)" stroke="#334155"/>
+      <text x="42" y="50" fill="#f8fafc" font-size="15" font-weight="700">Browser — web/</text>
+      <text x="42" y="80" fill="#94a3b8" font-size="12">Vanilla JS + SVG · topology · per-node logs · event stream · controls</text>
+      <line x1="360" y1="112" x2="360" y2="162" stroke="#f87171" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="374" y="142" fill="#f87171" font-size="12" font-family="Share Tech Mono">ws:// events</text>
+      <rect x="20" y="170" width="680" height="112" rx="14" fill="rgba(220,38,38,.05)" stroke="#334155"/>
+      <text x="42" y="202" fill="#f8fafc" font-size="15" font-weight="700">Python 3.11 — raft/ · asyncio</text>
+      <g font-family="Share Tech Mono" font-size="12" fill="#94a3b8">
+        <rect x="42" y="218" width="150" height="44" rx="9" fill="rgba(15,23,42,.6)" stroke="#1e293b"/><text x="60" y="245">core/node.py</text>
+        <rect x="207" y="218" width="150" height="44" rx="9" fill="rgba(15,23,42,.6)" stroke="#1e293b"/><text x="225" y="245">core/cluster.py</text>
+        <rect x="372" y="218" width="150" height="44" rx="9" fill="rgba(15,23,42,.6)" stroke="#1e293b"/><text x="390" y="245">core/network.py</text>
+        <rect x="537" y="218" width="141" height="44" rx="9" fill="rgba(15,23,42,.6)" stroke="#1e293b"/><text x="555" y="245">api/server.py</text>
+      </g>
+    </svg>
+    <div class="mods">
+      <code>simulated clock</code><code>random latency</code><code>partition as citizen</code><code>event-driven UI</code><code>pytest scenarios</code>
+    </div>
   </div>
 </div></section>
 
+<!-- ۰۴ تیم -->
 <section id="team"><div class="wrap">
-  <h2><span class="bar"></span> تیم</h2>
-  <p class="lead">قانون ثابت: هر PR توسط عضو دوم بازبینی می‌شود. تقسیم کار پیشنهادی است؛ تصمیم‌ها مکتوب می‌مانند.</p>
+  <div class="shead"><span class="no">04/</span><h2>دو نفر، یک خوشه</h2></div>
+  <p class="slede">قانون ثابت تیم: هیچ push مستقیمی به main، و هر Pull Request فقط با بازبینی نفر دوم merge می‌شود.</p>
   <div class="team">
-    <div class="card member"><div class="ava a1">پ</div>
+    <div class="tile person" data-rv><div class="ava a1">پ</div>
       <div><h3>پرهام خان‌محمدی</h3><div class="role">موتور Raft · تست‌ها · معماری — Admin</div>
-      <div class="links"><a href="https://github.com/parham7991">github/parham7991</a><a href="https://t.me/Parham_7991">t.me/Parham_7991</a></div></div></div>
-    <div class="card member"><div class="ava a2">ع</div>
-      <div><h3>علی عرب‌محمدی</h3><div class="role">UI/UX · لایهٔ نمایش · داکیومنت — Write</div>
-      <div class="links"><a href="https://github.com/Alivrab">github/Alivrab</a><a href="https://t.me/c4llmeali">t.me/c4llmeali</a></div></div></div>
+      <div class="plinks"><a href="https://github.com/parham7991">github/parham7991</a><a href="https://t.me/Parham_7991">t.me/Parham_7991</a></div></div></div>
+    <div class="tile person" data-rv style="--d:1"><div class="ava a2">ع</div>
+      <div><h3>علی عرب‌محمدی</h3><div class="role">UI/UX · لایهٔ نمایش · اسناد — Write</div>
+      <div class="plinks"><a href="https://github.com/Alivrab">github/Alivrab</a><a href="https://t.me/c4llmeali">t.me/c4llmeali</a></div></div></div>
   </div>
 </div></section>
 
+<!-- ۰۵ اسناد -->
 <section id="docs"><div class="wrap">
-  <h2><span class="bar"></span> اسناد پروژه</h2>
-  <p class="lead">همهٔ تصمیم‌های فنی این‌جا مکتوب است — منبع حقیقت برای هر دو عضو و برای ارائهٔ کلاسی.</p>
-  <div class="doclist">
-    <a class="card doc" href="01-raft-theory.md"><span class="arr">←</span><span class="num">DOC · 01</span><h3>تئوری Raft</h3><p>انتخابات، تکرار لاگ، اثبات ایمنی — به فارسی ساده.</p></a>
-    <a class="card doc" href="02-architecture.md"><span class="arr">←</span><span class="num">DOC · 02</span><h3>معماری سیستم</h3><p>موتور asyncio، پل WebSocket، استراتژی تست.</p></a>
-    <a class="card doc" href="03-roadmap.md"><span class="arr">←</span><span class="num">DOC · 03</span><h3>نقشهٔ راه و ریسک</h3><p>فازها، ددلاین‌ها، Definition of Done.</p></a>
-    <a class="card doc" href="04-team.md"><span class="arr">←</span><span class="num">DOC · 04</span><h3>تیم و همکاری</h3><p>تقسیم کار، دسترسی‌ها، قواعد بازبینی.</p></a>
+  <div class="shead"><span class="no">05/</span><h2>اسناد، منبع حقیقت</h2></div>
+  <p class="slede">هر تصمیم فنی اول این‌جا مکتوب می‌شود، بعد کد. همین سایت هم نسخهٔ زندهٔ همین اسناد است.</p>
+  <div class="docs">
+    <a class="tile doc" href="01-raft-theory.md" data-rv><span class="num">DOC·01</span><h3>تئوری Raft</h3><p>انتخابات، تکرار لاگ و اثبات ایمنی — به فارسی ساده.</p><span class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></span></a>
+    <a class="tile doc" href="02-architecture.md" data-rv style="--d:1"><span class="num">DOC·02</span><h3>معماری سیستم</h3><p>موتور asyncio، پل WebSocket، استراتژی تست.</p><span class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></span></a>
+    <a class="tile doc" href="03-roadmap.md" data-rv style="--d:2"><span class="num">DOC·03</span><h3>نقشهٔ راه</h3><p>مراحل، معیار پذیرش و مدیریت ریسک.</p><span class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></span></a>
+    <a class="tile doc" href="04-team.md" data-rv style="--d:3"><span class="num">DOC·04</span><h3>تیم و همکاری</h3><p>تقسیم کار، دسترسی‌ها، قواعد بازبینی.</p><span class="arr"><svg class="i" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></span></a>
   </div>
 </div></section>
 
 <footer><div class="wrap">
-  ساخته‌شده با ❤️ برای درس <b>اصول سیستم‌عامل</b> · پاییز ۱۴۰۵ ·
-  <b>Raft Consensus Simulator</b> — <a href="https://github.com/parham7991/raft-consensus-simulator" style="color:var(--teal)">GitHub</a>
+  <svg class="i" viewBox="0 0 32 32" style="width:22px;height:22px"><path d="M16 7L8 25M16 7l8 18M8 25h16" stroke="#334155" stroke-width="2.4"/><circle cx="16" cy="7" r="5" fill="#f87171"/><circle cx="8" cy="25" r="5" fill="#60a5fa"/><circle cx="24" cy="25" r="5" fill="#60a5fa"/></svg>
+  <span>Raft Consensus Simulator — ساختهٔ دستِ <b style="color:var(--fg)">دو نفر</b>، با <span class="heart">♥</span> برای اصول سیستم‌عامل</span>
+  <span class="sp"></span>
+  <a href="https://github.com/parham7991/raft-consensus-simulator">GitHub</a>
+  <a href="https://github.com/parham7991/raft-consensus-simulator/issues">Issueها</a>
+  <a href="https://github.com/parham7991/raft-consensus-simulator/milestones">Milestoneها</a>
 </div></footer>
 
+<script>
+(function(){
+"use strict";
+var RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* منوی موبایل */
+var nav = document.getElementById("nav"), mb = document.getElementById("menu-btn");
+mb.addEventListener("click", function(){
+  var open = nav.classList.toggle("open");
+  mb.setAttribute("aria-expanded", open);
+});
+document.getElementById("links").addEventListener("click", function(e){
+  if(e.target.tagName === "A") nav.classList.remove("open");
+});
+
+/* stagger کلمه‌ای تیتر (کلمه‌ها سالم می‌مانند تا حروف فارسی نچسبند به مشکل) */
+(function(){
+  var h = document.getElementById("h1");
+  var walk = function(node){
+    Array.prototype.slice.call(node.childNodes).forEach(function(ch){
+      if(ch.nodeType === 3){
+        var frag = document.createDocumentFragment();
+        ch.textContent.split(/(\s+)/).forEach(function(part){
+          if(!part) return;
+          if(/^\s+$/.test(part)){ frag.appendChild(document.createTextNode(part)); return; }
+          var s = document.createElement("span");
+          s.className = "w"; s.style.setProperty("--i", i++);
+          s.setAttribute("aria-hidden","true"); s.textContent = part;
+          frag.appendChild(s);
+        });
+        node.replaceChild(frag, ch);
+      } else if(ch.nodeType === 1){ walk(ch); }
+    });
+  };
+  var i = 0; walk(h);
+})();
+
+/* reveal on scroll */
+if(!RM && "IntersectionObserver" in window){
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, {threshold:.15});
+  document.querySelectorAll("[data-rv]").forEach(function(el){ io.observe(el); });
+}else{
+  document.querySelectorAll("[data-rv]").forEach(function(el){ el.classList.add("in"); });
+}
+
+/* ---------- مینی‌شبیه‌ساز Raft داخل هدر ---------- */
+var NS = "http://www.w3.org/2000/svg";
+var POS = [[210,58],[86,204],[334,204]];
+var sim = { term:1, leader:0, commit:0, alive:[true,true,true], votes:0, msgs:[], t:0,
+            deadUntil:-1, cycle:0 };
+var gN = document.getElementById("nodes"), gM = document.getElementById("msgs"), gL = document.getElementById("links");
+var sTerm = document.getElementById("s-term"), sLead = document.getElementById("s-lead"),
+    sCom = document.getElementById("s-com"), sEv = document.getElementById("s-ev");
+
+POS.forEach(function(p,i){
+  POS.forEach(function(q,j){
+    if(j>i){ var l = document.createElementNS(NS,"line");
+      l.setAttribute("x1",p[0]); l.setAttribute("y1",p[1]);
+      l.setAttribute("x2",q[0]); l.setAttribute("y2",q[1]);
+      l.id = "L"+i+j; gL.appendChild(l); }
+  });
+});
+var nodeEls = POS.map(function(p,i){
+  var g = document.createElementNS(NS,"g");
+  var halo = document.createElementNS(NS,"circle");
+  halo.setAttribute("cx",p[0]); halo.setAttribute("cy",p[1]); halo.setAttribute("r",26);
+  halo.setAttribute("fill","none"); halo.setAttribute("stroke","#dc2626"); halo.setAttribute("stroke-width","1.5"); halo.setAttribute("opacity","0");
+  var c = document.createElementNS(NS,"circle");
+  c.setAttribute("cx",p[0]); c.setAttribute("cy",p[1]); c.setAttribute("r",21);
+  c.setAttribute("fill","#101c33"); c.setAttribute("stroke","#334155"); c.setAttribute("stroke-width","2");
+  var id = document.createElementNS(NS,"text");
+  id.setAttribute("x",p[0]); id.setAttribute("y",p[1]+5); id.setAttribute("text-anchor","middle");
+  id.setAttribute("fill","#f8fafc"); id.setAttribute("font-size","14"); id.setAttribute("font-weight","700");
+  id.textContent = ["A","B","C"][i];
+  var tm = document.createElementNS(NS,"text");
+  tm.setAttribute("x",p[0]); tm.setAttribute("y",p[1]-30); tm.setAttribute("text-anchor","middle");
+  tm.setAttribute("fill","#64748b"); tm.setAttribute("font-size","10"); tm.setAttribute("font-family","Share Tech Mono");
+  g.appendChild(halo); g.appendChild(c); g.appendChild(id); g.appendChild(tm);
+  gN.appendChild(g);
+  return {g:g,c:c,halo:halo,tm:tm};
+});
+
+function ev(t){ sEv.innerHTML = "<span>›</span> " + t; }
+function send(from,to,color,dur,onArrive){
+  sim.msgs.push({from:from,to:to,born:sim.t,dur:dur,color:color,onArrive:onArrive,
+    el:document.createElementNS(NS,"circle")});
+  var m = sim.msgs[sim.msgs.length-1];
+  m.el.setAttribute("r","4"); m.el.setAttribute("fill",color);
+  gM.appendChild(m.el);
+}
+function heartbeat(){
+  var L = sim.leader;
+  [0,1,2].forEach(function(i){
+    if(i!==L && sim.alive[i]) send(L,i,"#60a5fa",700,function(){ pulse(i,"#60a5fa"); });
+  });
+}
+function pulse(i,color){
+  var h = nodeEls[i].halo;
+  h.setAttribute("stroke",color); h.setAttribute("opacity",".8");
+  setTimeout(function(){ h.setAttribute("opacity","0"); }, 380);
+}
+function elect(cand){
+  sim.term++; sim.votes = 1;
+  nodeEls.forEach(function(n){ n.tm.textContent = "t"+sim.term; });
+  [0,1,2].forEach(function(i){
+    if(i!==cand && sim.alive[i]) send(cand,i,"#fbbf24",650,function(){
+      sim.votes++;
+      if(sim.votes >= 2 && sim.leader !== cand){
+        sim.leader = cand; sim.commit++;
+        nodeEls[cand].c.setAttribute("stroke","#f87171");
+        nodeEls[cand].c.setAttribute("stroke-width","3");
+        ev("گرهٔ "+["A","B","C"][cand]+" رهبر شد — term "+sim.term);
+        heartbeat();
+      }
+    });
+  });
+  ev("درخواست رأی از "+["A","B","C"][cand]+" — term "+sim.term);
+}
+function paint(){
+  nodeEls.forEach(function(n,i){
+    var alive = sim.alive[i];
+    n.c.setAttribute("opacity", alive?1:.28);
+    n.g.querySelectorAll("text").forEach(function(t){ t.setAttribute("opacity", alive?1:.35); });
+    if(alive && i===sim.leader){ n.c.setAttribute("stroke","#f87171"); n.c.setAttribute("stroke-width","3"); }
+    else { n.c.setAttribute("stroke","#334155"); n.c.setAttribute("stroke-width","2"); }
+  });
+  sTerm.textContent = sim.term; sLead.textContent = ["A","B","C"][sim.leader]; sCom.textContent = sim.commit;
+}
+var last = performance.now(), hbAt = 0, scriptAt = 2600;
+function loop(now){
+  var dt = now - last; last = now; sim.t += dt;
+  /* اسکریپت رویدادها: مرگ رهبر، انتخابات، بازگشت */
+  if(sim.t > scriptAt){
+    scriptAt = sim.t + 7000;
+    if(sim.alive[0] && sim.alive[1] && sim.alive[2]){
+      var victim = sim.leader;
+      sim.alive[victim] = false;
+      ev("گرهٔ "+["A","B","C"][victim]+" سقوط کرد! خوشه بی‌رهبر ماند…");
+      var cand = (victim+1)%3;
+      setTimeout(function(){ elect(cand); }, 900);
+    } else {
+      var dead = sim.alive.indexOf(false);
+      sim.alive[dead] = true;
+      ev("گرهٔ "+["A","B","C"][dead]+" برگشت و catch-up می‌کند.");
+      sim.commit++;
+    }
+  }
+  if(sim.t - hbAt > 1500 && sim.alive[sim.leader]){ hbAt = sim.t; heartbeat(); }
+  /* پیام‌های در راه */
+  for(var i=sim.msgs.length-1;i>=0;i--){
+    var m = sim.msgs[i], k = (sim.t - m.born)/m.dur;
+    if(k>=1){ if(m.onArrive) m.onArrive(); gM.removeChild(m.el); sim.msgs.splice(i,1); continue; }
+    var a = POS[m.from], b = POS[m.to];
+    m.el.setAttribute("cx", a[0]+(b[0]-a[0])*k);
+    m.el.setAttribute("cy", a[1]+(b[1]-a[1])*k);
+    m.el.setAttribute("opacity", .95 - .3*k);
+  }
+  paint();
+  requestAnimationFrame(loop);
+}
+if(!RM){ ev("بوت خوشه… term 1"); setTimeout(function(){ elect(0); }, 700); requestAnimationFrame(loop); }
+else { paint(); ev("حالت reduced-motion: نمای ایستا."); }
+})();
+</script>
 </body>
 </html>
