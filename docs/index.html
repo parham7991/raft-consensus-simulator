@@ -134,26 +134,11 @@ h2{font-family:var(--fd);font-weight:400;font-size:clamp(26px,4vw,38px)}
 .safe b{color:var(--fg)}
 
 /* ---------- مراحل ---------- */
-.steps{counter-reset:st;display:flex;flex-direction:column;gap:14px}
-.step{display:grid;grid-template-columns:86px 1fr;gap:20px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;transition:border-color .25s,transform .25s var(--e-out)}
-.step:hover{transform:translateX(-6px);border-color:var(--line2)}
-.step .n{font-family:var(--fd);font-size:46px;line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--line2);text-align:center;padding-top:6px}
-.step h3{font-size:16.5px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.step p{color:var(--mut);font-size:13.5px}
-.step .jobs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.step .jobs span{font-size:11.5px;color:var(--mut);border:1px solid var(--line2);border-radius:999px;padding:4px 12px;background:rgba(15,23,42,.5)}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step .n{font-family:var(--fd);font-size:44px;line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--line2);text-align:center}
 .st-ico{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;flex:none}
 .st-ico .i{width:12px;height:12px}
-.done .st-ico{background:rgba(74,222,128,.15);color:var(--ok)}
-.done .n{-webkit-text-stroke-color:rgba(74,222,128,.5)}
-.now{border-color:rgba(220,38,38,.45)}
-.now .st-ico{background:rgba(220,38,38,.18);color:var(--accent-hi);animation:pl 1.8s infinite}
-.now .n{-webkit-text-stroke-color:var(--accent)}
 .st-label{font-size:11px;padding:3px 11px;border-radius:999px;border:1px solid}
-.done .st-label{color:var(--ok);border-color:rgba(74,222,128,.4)}
-.now .st-label{color:var(--accent-hi);border-color:rgba(220,38,38,.4)}
-.todo .st-ico{background:rgba(148,163,184,.1);color:var(--dim)}
-.todo .st-label{color:var(--dim);border-color:var(--line2)}
 
 /* ---------- معماری ---------- */
 .arch{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:28px;overflow-x:auto}
@@ -191,6 +176,42 @@ footer .heart{color:var(--accent-hi)}
 footer .sp{flex:1}
 footer a{color:var(--mut);text-decoration:none}
 footer a:hover{color:var(--fg)}
+
+
+/* ---------- steps v2: accordion + owners ---------- */
+details.step{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;transition:border-color .3s,box-shadow .3s}
+details.step:hover{border-color:var(--line2)}
+details.step[open]{border-color:var(--line2);box-shadow:0 18px 50px rgba(0,0,0,.4)}
+details.step summary{display:grid;grid-template-columns:70px 1fr auto;gap:18px;align-items:center;padding:20px 24px;cursor:pointer;list-style:none}
+details.step summary::-webkit-details-marker{display:none}
+details.step .chev{color:var(--dim);transition:transform .35s var(--e-out)}
+details.step[open] .chev{transform:rotate(180deg)}
+details.step .head2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+details.step h3{font-size:16.5px}
+.sub{border-top:1px solid var(--line);padding:6px 24px 18px}
+.sub .row{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px dashed var(--line);font-size:13.5px;color:var(--mut)}
+.sub .row:last-child{border-bottom:0}
+.sub .row .i{width:15px;height:15px;color:var(--dim);flex:none}
+.sub .row.done .i{color:var(--ok)}
+.sub .row b{color:var(--fg);font-weight:500}
+.own{margin-right:auto;flex:none;font-size:11px;border-radius:999px;padding:3px 13px;border:1px solid;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.own::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.own.p{color:var(--accent-hi);border-color:rgba(248,113,113,.35);background:rgba(220,38,38,.07)}
+.own.a{color:#93c5fd;border-color:rgba(147,197,253,.35);background:rgba(59,130,246,.07)}
+.own.d{color:var(--violet);border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.07)}
+
+/* ---------- team v2: real faces ---------- */
+.ava{width:88px;height:88px;border-radius:22px;overflow:hidden;position:relative;flex:none;background:var(--panel2);border:1px solid var(--line2)}
+.ava img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--e-out)}
+.person:hover .ava img{transform:scale(1.08) rotate(1deg)}
+.ava .fb{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--fd);font-size:34px;color:#0b1220}
+.ava.a1 .fb{background:linear-gradient(135deg,#f87171,#dc2626)}
+.ava.a2 .fb{background:linear-gradient(135deg,#93c5fd,#3b82f6)}
+.resp{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+.resp span{font-size:11.5px;color:var(--mut);border:1px solid var(--line2);border-radius:999px;padding:4px 12px;background:rgba(15,23,42,.5)}
+.rule{grid-column:1/-1;display:flex;gap:14px;align-items:center}
+.rule .i{width:26px;height:26px;color:var(--ok);flex:none}
+.rule p{font-size:13px}
 
 /* ---------- responsive ---------- */
 @media (max-width:1024px){
@@ -309,39 +330,101 @@ footer a:hover{color:var(--fg)}
 
 <!-- ۰۲ مراحل -->
 <section id="steps"><div class="wrap">
-  <div class="shead"><span class="no">02/</span><h2>مسیر ساخت، مرحله به مرحله</h2></div>
-  <p class="slede">بدون عجله و بدون پرش: هر مرحله وقتی تمام است که تست‌هایش سبز باشند. روی گیت‌هاب، هر مرحله یک Milestone و هر کار یک Issue است.</p>
+  <div class="shead"><span class="no">02/</span><h2>نه مرحله، هر کدام با مالک</h2></div>
+  <p class="slede">هیچ کاری «مالِ هیچ‌کس» نیست: هر زیرمرحله یک صاحب دارد و روی گیت‌هاب همان‌ها Issue شده‌اند با لیبل مالک. هر مرحله وقتی بسته می‌شود که تست‌هایش سبز و PRش بازبینی شده باشد.</p>
   <div class="steps">
-    <div class="step done" data-rv><div class="n">۰</div><div>
-      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span> پی‌ریزی پروژه <span class="st-label">تمام شد</span></h3>
-      <p>مخزن مشترک با دسترسی Write برای هر دو عضو، README و اسناد فنی، همین سایت، قالب‌های Issue/PR و قوانین مشارکت.</p>
-      <div class="jobs"><span>README دوزبانه</span><span>۴ سند فنی</span><span>سایت داکیومنت</span><span>قالب‌های GitHub</span></div>
-    </div></div>
-    <div class="step now" data-rv style="--d:1"><div class="n">۱</div><div>
-      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span> هستهٔ انتخاب رهبر <span class="st-label">همین حالا</span></h3>
-      <p>ماشین حالت سه‌نقشی با state ماندگار/فرار، تایمر انتخابات تصادفی، RPCهای رأی‌گیری و قانون لاگِ به‌روز.</p>
-      <div class="jobs"><span>raft/core/node.py</span><span>RequestVote</span><span>تست تک‌رهبری</span><span>تست split-vote</span></div>
-    </div></div>
-    <div class="step todo" data-rv style="--d:2"><div class="n">۲</div><div>
-      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18"/></svg></span> تکرار لاگ <span class="st-label">بعدی</span></h3>
-      <p>AppendEntries و heartbeat، مدیریت nextIndex/matchIndex، تشخیص تضاد و truncate، محاسبهٔ commit و اعمال ترتیبی به state machine.</p>
-      <div class="jobs"><span>AppendEntries</span><span>conflict & truncate</span><span>state machine</span><span>تست ۱۰ فرمان</span></div>
-    </div></div>
-    <div class="step todo" data-rv style="--d:3"><div class="n">۳</div><div>
-      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg></span> تحمل خطا <span class="st-label">در صف</span></h3>
-      <p>kill/restart با مرز دقیق persisted/volatile، پارتیشن شبکه، مرگ رهبر، split-brain و heal — هر سناریو یک تست یکپارچه.</p>
-      <div class="jobs"><span>crash/restart</span><span>partition</span><span>step-down رهبر قدیمی</span></div>
-    </div></div>
-    <div class="step todo" data-rv style="--d:4"><div class="n">۴</div><div>
-      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 22h8M12 18v4"/></svg></span> رابط وب تعاملی <span class="st-label">در صف</span></h3>
-      <p>توپولوژی SVG با انیمیشن پیام‌ها، قطع لینک با کلیک، پنل لاگ رنگی هر گره، event stream زنده، کنترل سرعت و pause/step — وصل به موتور با WebSocket.</p>
-      <div class="jobs"><span>SVG topology</span><span>event stream</span><span>WebSocket bridge</span><span>تست E2E</span></div>
-    </div></div>
-    <div class="step todo" data-rv style="--d:5"><div class="n">۵</div><div>
-      <h3><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg></span> گزارش و ارائه <span class="st-label">پایانی</span></h3>
-      <p>گزارش نهایی مطابق قالب درس، اسلاید، و دموی زندهٔ سه‌دقیقه‌ای سناریوها — با یک بوفِر کامل برای اتفاقات ناخواسته.</p>
-      <div class="jobs"><span>گزارش</span><span>اسلاید</span><span>دموی زنده</span></div>
-    </div></div>
+
+  <details class="step done" data-rv><summary>
+    <div class="n" style="-webkit-text-stroke-color:rgba(74,222,128,.5)">۱</div>
+    <div class="head2"><span class="st-ico" style="background:rgba(74,222,128,.15);color:var(--ok)"><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span><h3>پی‌ریزی و داکیومنت</h3><span class="st-label" style="color:var(--ok);border-color:rgba(74,222,128,.4)">تمام شد</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row done"><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg><b>مخزن مشترک</b> و دسترسی Write برای هر دو عضو<span class="own p">پرهام</span></div>
+    <div class="row done"><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg><b>README، مجوز MIT</b> و قواعد مشارکت<span class="own d">هر دو</span></div>
+    <div class="row done"><svg class="i" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg><b>چهار سند فنی</b> + همین سایت داکیومنت<span class="own a">علی</span></div>
+  </div></details>
+
+  <details class="step now" open data-rv style="--d:1"><summary>
+    <div class="n" style="-webkit-text-stroke-color:var(--accent)">۲</div>
+    <div class="head2"><span class="st-ico" style="background:rgba(220,38,38,.18);color:var(--accent-hi);animation:pl 1.8s infinite"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span><h3>هستهٔ Node و زمان شبیه‌سازی</h3><span class="st-label" style="color:var(--accent-hi);border-color:rgba(220,38,38,.4)">همین حالا</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>ماشین حالت سه‌نقشی + جداسازی state ماندگار/فرار<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>ساعت شبیه‌سازی و حلقهٔ tick<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>لایهٔ شبکه: تأخیر تصادفی + لینک‌های قابل قطع<span class="own p">پرهام</span></div>
+  </div></details>
+
+  <details class="step todo" data-rv style="--d:2"><summary>
+    <div class="n">۳</div>
+    <div class="head2"><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></span><h3>انتخاب رهبر</h3><span class="st-label">در صف</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>تایمر تصادفی + RPCهای <span class="mono">RequestVote/VoteResponse</span><span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>قانون «لاگِ به‌روز» برای رأی دادن<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>تست واحد: تک‌رهبری و split vote<span class="own p">پرهام</span></div>
+  </div></details>
+
+  <details class="step todo" data-rv style="--d:3"><summary>
+    <div class="n">۴</div>
+    <div class="head2"><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18"/></svg></span><h3>تکرار لاگ</h3><span class="st-label">در صف</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg><span class="mono">AppendEntries</span> و heartbeat<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>تشخیص تضاد و truncate<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg><span class="mono">commitIndex</span> و state machine<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>تست یکپارچهٔ ۱۰ فرمان<span class="own d">هر دو</span></div>
+  </div></details>
+
+  <details class="step todo" data-rv style="--d:4"><summary>
+    <div class="n">۵</div>
+    <div class="head2"><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg></span><h3>تحمل خطا</h3><span class="st-label">در صف</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>crash/restart با مرز persisted/volatile<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>پارتیشن شبکه و split-brain<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>تست سناریوها: مرگ رهبر، heal، step-down<span class="own p">پرهام</span></div>
+  </div></details>
+
+  <details class="step todo" data-rv style="--d:5"><summary>
+    <div class="n">۶</div>
+    <div class="head2"><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><h3>پل WebSocket و API</h3><span class="st-label">در صف</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>سرور asyncio و انتشار زندهٔ رویدادها<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>پروتکل کنترل: kill / submit / partition از بیرون<span class="own p">پرهام</span></div>
+  </div></details>
+
+  <details class="step todo" data-rv style="--d:6"><summary>
+    <div class="n">۷</div>
+    <div class="head2"><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 22h8M12 18v4"/></svg></span><h3>رابط وب تعاملی</h3><span class="st-label">در صف</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>توپولوژی SVG با انیمیشن پیام‌ها و قطع لینک با کلیک<span class="own a">علی</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>پنل لاگ هر گره + event stream زنده<span class="own a">علی</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>کنترل‌ها: سرعت، pause/step، submit، kill/restart<span class="own a">علی</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>توکن‌های طراحی، ریسپانسیو و دسترس‌پذیری رابط<span class="own a">علی</span></div>
+  </div></details>
+
+  <details class="step todo" data-rv style="--d:7"><summary>
+    <div class="n">۸</div>
+    <div class="head2"><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/></svg></span><h3>تست، کیفیت و سخت‌سازی</h3><span class="st-label">در صف</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>assertionهای ایمنی در هر tick<span class="own p">پرهام</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>تست E2E مرورگر + WebSocket<span class="own d">هر دو</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>ممیزی عملکرد و دسترس‌پذیری رابط<span class="own a">علی</span></div>
+  </div></details>
+
+  <details class="step todo" data-rv style="--d:8"><summary>
+    <div class="n">۹</div>
+    <div class="head2"><span class="st-ico"><svg class="i" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg></span><h3>گزارش و ارائه</h3><span class="st-label">پایانی</span></div>
+    <svg class="i chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+  </summary><div class="sub">
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>گزارش نهایی مطابق قالب درس<span class="own d">هر دو</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>اسلاید + دموی زندهٔ ۳ دقیقه‌ای<span class="own d">هر دو</span></div>
+    <div class="row"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>بازبینی نهایی اسناد و سایت<span class="own a">علی</span></div>
+  </div></details>
+
   </div>
 </div></section>
 
@@ -377,14 +460,22 @@ footer a:hover{color:var(--fg)}
 <!-- ۰۴ تیم -->
 <section id="team"><div class="wrap">
   <div class="shead"><span class="no">04/</span><h2>دو نفر، یک خوشه</h2></div>
-  <p class="slede">قانون ثابت تیم: هیچ push مستقیمی به main، و هر Pull Request فقط با بازبینی نفر دوم merge می‌شود.</p>
+  <p class="slede">عکس‌ها مستقیم از پروفایل گیت‌هاب خودمان لود می‌شوند؛ اگر جایی شبکه قطع بود، حروف جایگزین حواسشان هست.</p>
   <div class="team">
-    <div class="tile person" data-rv><div class="ava a1">پ</div>
+    <div class="tile person" data-rv>
+      <div class="ava a1"><span class="fb">پ</span><img src="https://avatars.githubusercontent.com/u/31302433?v=4" alt="عکس پروفایل پرهام خان‌محمدی" loading="lazy" onerror="this.style.display='none'"></div>
       <div><h3>پرهام خان‌محمدی</h3><div class="role">موتور Raft · تست‌ها · معماری — Admin</div>
+      <div class="resp"><span>موتور شبیه‌سازی</span><span>تست‌های سناریو</span><span>سرور WebSocket</span><span>دموی زنده</span></div>
       <div class="plinks"><a href="https://github.com/parham7991">github/parham7991</a><a href="https://t.me/Parham_7991">t.me/Parham_7991</a></div></div></div>
-    <div class="tile person" data-rv style="--d:1"><div class="ava a2">ع</div>
+    <div class="tile person" data-rv style="--d:1">
+      <div class="ava a2"><span class="fb">ع</span><img src="https://avatars.githubusercontent.com/u/280059468?v=4" alt="عکس پروفایل علی عرب‌محمدی" loading="lazy" onerror="this.style.display='none'"></div>
       <div><h3>علی عرب‌محمدی</h3><div class="role">UI/UX · لایهٔ نمایش · اسناد — Write</div>
+      <div class="resp"><span>رابط شبیه‌ساز</span><span>دیزاین‌سیستم</span><span>سایت و اسناد</span><span>اسلاید ارائه</span></div>
       <div class="plinks"><a href="https://github.com/Alivrab">github/Alivrab</a><a href="https://t.me/c4llmeali">t.me/c4llmeali</a></div></div></div>
+    <div class="tile rule" data-rv style="--d:2">
+      <svg class="i" viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      <p><b style="color:var(--fg)">قانون ثابت تیم:</b> هیچ push مستقیمی به <span class="mono">main</span> وجود ندارد؛ هر Pull Review را نفر دوم انجام می‌دهد و هر تصمیم فنی اول در اسناد مکتوب می‌شود، بعد در کد.</p>
+    </div>
   </div>
 </div></section>
 
