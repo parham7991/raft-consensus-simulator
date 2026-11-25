@@ -95,10 +95,12 @@ python -m raft.api.server          # موتور + WebSocket روی :8000
 
 ## 👥 تیم
 
-| عضو | گیت‌هاب | تلگرام | نقش پیشنهادی |
+| عضو | گیت‌هاب | تلگرام | نقش |
 |---|---|---|---|
-| پرهام خان‌محمدی | [@parham7991](https://github.com/parham7991) | [@Parham_7991](https://t.me/Parham_7991) | موتور Raft، تست‌ها، معماری |
-| علی عرب‌محمدی | [@Alivrab](https://github.com/Alivrab) | [@c4llmeali](https://t.me/c4llmeali) | رابط وب، UI/UX، داکیومنت |
+| پرهام خان‌محمدی | [@parham7991](https://github.com/parham7991) | [@Parham_7991](https://t.me/Parham_7991) | رهبر موتور Raft · سرور WebSocket · assertionهای ایمنی |
+| علی عرب‌محمدی | [@Alivrab](https://github.com/Alivrab) | [@c4llmeali](https://t.me/c4llmeali) | رهبر رابط و UI/UX · تست‌های سناریو و E2E · اسناد و اسلاید |
+
+> این پروژه با **شراکت برابر** ساخته می‌شود: هر فاز هر دو نفر را دارد (یک نویسنده‌ی اصلی + یک همکار و بازبین) و در فازهای مشترک کار نصف‌نصف است — جزئیات در [docs/04-team.md](docs/04-team.md).
 
 > هر Pull Request باید توسط عضو دیگر تیم **بازبینی و تأیید** شود — جزئیات در [CONTRIBUTING.md](CONTRIBUTING.md).
 
